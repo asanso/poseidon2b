@@ -1,10 +1,10 @@
-from .params import Poseidon2bPermutationParameters
+from .params import Poseidon2bParameters
 import galois as gf
 import numpy as np
 
 
 class Poseidon2b:
-    def __init__(self, params: Poseidon2bPermutationParameters) -> None:
+    def __init__(self, params: Poseidon2bParameters) -> None:
         self._ROUND_CONSTANTS = params.generate_round_constants()
         self._FULL_ROUND_MATRIX = params.generate_full_round_matrix()
         self._PARTIAL_ROUND_MATRIX = params.generate_partial_round_matrix()

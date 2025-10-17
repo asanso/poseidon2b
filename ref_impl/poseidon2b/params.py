@@ -5,7 +5,7 @@ from .utils import SHAKEUtils
 
 
 @dataclass
-class Poseidon2bPermutationParameters:
+class Poseidon2bParameters:
     gf_degree: int
     state_len: int
     num_full_rounds: int
@@ -22,14 +22,16 @@ class Poseidon2bPermutationParameters:
         return self.num_full_rounds - self.num_initial_full_rounds()
 
     def generate_partial_round_matrix(self) -> gf.FieldArray:
-        assert self.gf_degree == 32 and (self.state_len == 16 or self.state_len == 24)
+        assert (
+            self.gf_degree == 32 and (self.state_len == 16 or self.state_len == 24)
+        ) or (self.gf_degree == 64 and (self.state_len == 8 or self.state_len == 12))
 
         GF = gf.GF(2**self.gf_degree)
 
         x = GF.primitive_element
         ones = GF.Ones((self.state_len, self.state_len)) - GF.Identity(self.state_len)
 
-        if self.state_len == 16:
+        if self.gf_degree == 32 and self.state_len == 16:
             diagonal = GF(
                 np.diag(
                     [
@@ -53,7 +55,7 @@ class Poseidon2bPermutationParameters:
                 )
             )
             return ones + diagonal
-        else:
+        elif self.gf_degree == 32 and self.state_len == 24:
             diagonal = GF(
                 np.diag(
                     [
@@ -85,36 +87,60 @@ class Poseidon2bPermutationParameters:
                 )
             )
             return ones + diagonal
+        elif self.gf_degree == 64 and self.state_len == 8:
+            diagonal = GF(
+                np.diag([x**7 + GF(1), x, x**9, x**7, x**13, x**12, x**14, x**6])
+            )
+            return ones + diagonal
+        else:
+            diagonal = GF(
+                np.diag(
+                    [
+                        x + GF(1),
+                        x**3,
+                        x**7,
+                        x**13,
+                        x**15,
+                        GF(1),
+                        x**15 + GF(1),
+                        x**11,
+                        x,
+                        x**10 + GF(1),
+                        x**12,
+                        x**10,
+                    ]
+                )
+            )
+            return ones + diagonal
 
     def generate_full_round_matrix(self) -> gf.FieldArray:
         assert self.state_len != 4 and self.state_len != 6
 
         GF = gf.GF(2**self.gf_degree)
 
-        prim_elem = GF.primitive_element
+        x = GF.primitive_element
         mat4x4 = GF(
             [
                 [
-                    prim_elem**2 + GF(1),
-                    prim_elem**2 + prim_elem + GF(1),
+                    x**2 + GF(1),
+                    x**2 + x + GF(1),
                     1,
-                    prim_elem + GF(1),
+                    x + GF(1),
                 ],
-                [prim_elem**2, prim_elem**2 + prim_elem, 1, 1],
+                [x**2, x**2 + x, 1, 1],
                 [
                     1,
-                    prim_elem + GF(1),
-                    prim_elem**2 + GF(1),
-                    prim_elem**2 + prim_elem + GF(1),
+                    x + GF(1),
+                    x**2 + GF(1),
+                    x**2 + x + GF(1),
                 ],
-                [1, 1, prim_elem**2, prim_elem**2 + prim_elem],
+                [1, 1, x**2, x**2 + x],
             ]
         )
 
         tby4 = self.state_len // 4
         blocks = [
-            [prim_elem * mat4x4 if i == j else mat4x4 for j in range(tby4)]
-            for i in range(tby4)
+            [x * mat4x4 if i == j else mat4x4 for j in range(tby4)] for i in range(tby4)
         ]
 
         return GF(np.block(blocks))
@@ -147,8 +173,10 @@ class Poseidon2bPermutationParameters:
         return rc_mat
 
 
-Poseidon2b_n32t16 = Poseidon2bPermutationParameters(32, 16, 8, 15, 7)
-Poseidon2b_n32t24 = Poseidon2bPermutationParameters(32, 24, 8, 15, 7)
+Poseidon2b_n32t16 = Poseidon2bParameters(32, 16, 8, 15, 7)
+Poseidon2b_n32t24 = Poseidon2bParameters(32, 24, 8, 15, 7)
+Poseidon2b_n64t8 = Poseidon2bParameters(64, 8, 8, 29, 7)
+Poseidon2b_n64t12 = Poseidon2bParameters(64, 12, 8, 29, 7)
 
 if __name__ == "__main__":
     print("This is not an executable module.")
