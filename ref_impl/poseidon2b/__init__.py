@@ -6,5 +6,7 @@ from .params import (
     Poseidon2b_n32t24,
     Poseidon2b_n64t12,
     Poseidon2b_n64t8,
+    Poseidon2b_n128t4,
+    Poseidon2b_n128t6,
 )
 from .poseidon2b import Poseidon2b

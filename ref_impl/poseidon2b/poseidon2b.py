@@ -9,7 +9,7 @@ class Poseidon2b:
         self._FULL_ROUND_MATRIX = params.generate_full_round_matrix()
         self._PARTIAL_ROUND_MATRIX = params.generate_partial_round_matrix()
 
-        self._GF = gf.GF(2**params.gf_degree)
+        self._GF = params.galois_field()
         self._params = params
 
     def _AddRoundCons(self, state: gf.FieldArray, ridx: int) -> gf.FieldArray:
