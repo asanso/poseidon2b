@@ -1,5 +1,5 @@
-__all__ = ["poseidon2b"]
+__all__ = ["params", "poseidon2b"]
 
 
-from .poseidon2b import Poseidon2b_n32t16
-from .poseidon2b import Poseidon2b_n32t24
+from .params import Poseidon2b_n32t16, Poseidon2b_n32t24
+from .poseidon2b import Poseidon2b
