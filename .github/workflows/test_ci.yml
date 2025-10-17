@@ -1,0 +1,36 @@
+# Taken from https://github.com/itzmeanjan/ChalametPIR/blob/68e6e0e440be1d2ee9d57338052a421ec9f30113/.github/workflows/test_ci.yml
+name: Test Poseidon2b
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        # See https://docs.github.com/en/actions/writing-workflows/choosing-where-your-workflow-runs/choosing-the-runner-for-a-job#standard-github-hosted-runners-for-public-repositories
+        # for available targets.
+        os: [
+            ubuntu-latest, # x86-64
+            ubuntu-24.04-arm, # arm64
+
+            macos-13, # x86_64
+            macos-latest, # arm64
+        ]
+      max-parallel: 4
+
+    steps:
+        - uses: actions/checkout@v4
+        - uses: actions/setup-python@v5
+          with:
+            python-version: '3.13'
+
+        - name: Setup Virtual Environment on ${{ matrix.os }}
+          run: make setup
+
+        - name: Runs tests on ${{ matrix.os }}
+          run: make test
