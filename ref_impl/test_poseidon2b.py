@@ -1,4 +1,4 @@
-from .poseidon2b import Poseidon2b_n32t16, Poseidon2b_n32t24
+from .poseidon2b import Poseidon2b_n32t16, Poseidon2b_n32t24, Poseidon2b
 import galois as gf
 
 
@@ -31,7 +31,7 @@ def test_Poseidon2b_n32t16_against_known_answer_test():
     GF = gf.GF(2**pos2b.gf_degree)
 
     init_state = GF(INIT_STATE)
-    computed_state = pos2b.permute(init_state)
+    computed_state = Poseidon2b(pos2b).permute(init_state)
 
     assert all(computed_state == EXPECTED_STATE)
 
@@ -98,6 +98,6 @@ def test_Poseidon2b_n32t24_against_known_answer_test():
     GF = gf.GF(2**pos2b.gf_degree)
 
     init_state = GF(INIT_STATE)
-    computed_state = pos2b.permute(init_state)
+    computed_state = Poseidon2b(pos2b).permute(init_state)
 
     assert all(computed_state == EXPECTED_STATE)
