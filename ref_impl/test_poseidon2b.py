@@ -3,6 +3,8 @@ from .poseidon2b import (
     Poseidon2b_n32t24,
     Poseidon2b,
     Poseidon2b_n64t8,
+    Poseidon2b_n128t4,
+    Poseidon2b_n128t6,
 )
 import galois as gf
 
@@ -33,7 +35,7 @@ def test_Poseidon2b_n32t16_against_known_answer_test():
         3531824307,
     ]
 
-    GF = gf.GF(2**pos2b.gf_degree)
+    GF = pos2b.galois_field()
 
     init_state = GF(INIT_STATE)
     computed_state = Poseidon2b(pos2b).permute(init_state)
@@ -100,7 +102,7 @@ def test_Poseidon2b_n32t24_against_known_answer_test():
         2618256400,
     ]
 
-    GF = gf.GF(2**pos2b.gf_degree)
+    GF = pos2b.galois_field()
 
     init_state = GF(INIT_STATE)
     computed_state = Poseidon2b(pos2b).permute(init_state)
@@ -126,7 +128,53 @@ def test_Poseidon2b_n64t8_against_known_answer_test():
         17484719721536023833,
     ]
 
-    GF = gf.GF(2**pos2b.gf_degree)
+    GF = pos2b.galois_field()
+
+    init_state = GF(INIT_STATE)
+    computed_state = Poseidon2b(pos2b).permute(init_state)
+
+    assert list(map(lambda x: int(x), computed_state)) == EXPECTED_STATE
+
+
+def test_Poseidon2b_n128t4_against_known_answer_test():
+    """
+    Test vector taken from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.ipynb.
+    """
+    pos2b = Poseidon2b_n128t4
+
+    INIT_STATE = [0, 1, 2, 3]
+    EXPECTED_STATE = [
+        190694032047300303914125217899381430126,
+        5112655656068718841781059291681792676,
+        313609626244364533523501173704655550348,
+        37684179678214226142224368748917426745,
+    ]
+
+    GF = pos2b.galois_field()
+
+    init_state = GF(INIT_STATE)
+    computed_state = Poseidon2b(pos2b).permute(init_state)
+
+    assert list(map(lambda x: int(x), computed_state)) == EXPECTED_STATE
+
+
+def test_Poseidon2b_n128t6_against_known_answer_test():
+    """
+    Test vector taken from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.ipynb.
+    """
+    pos2b = Poseidon2b_n128t6
+
+    INIT_STATE = [0, 1, 2, 3, 4, 5]
+    EXPECTED_STATE = [
+        210105174278901385894543708583193164885,
+        228518741170243896768842647243322832405,
+        45838152944830247173621358189720241591,
+        332050717679287485158248364790277533378,
+        179338549228488138204138874001126554601,
+        280548768647529633273240681102980736256,
+    ]
+
+    GF = pos2b.galois_field()
 
     init_state = GF(INIT_STATE)
     computed_state = Poseidon2b(pos2b).permute(init_state)
