@@ -1,4 +1,9 @@
-from .poseidon2b import Poseidon2b_n32t16, Poseidon2b_n32t24, Poseidon2b
+from .poseidon2b import (
+    Poseidon2b_n32t16,
+    Poseidon2b_n32t24,
+    Poseidon2b,
+    Poseidon2b_n64t8,
+)
 import galois as gf
 
 
@@ -33,7 +38,7 @@ def test_Poseidon2b_n32t16_against_known_answer_test():
     init_state = GF(INIT_STATE)
     computed_state = Poseidon2b(pos2b).permute(init_state)
 
-    assert all(computed_state == EXPECTED_STATE)
+    assert list(map(lambda x: int(x), computed_state)) == EXPECTED_STATE
 
 
 def test_Poseidon2b_n32t24_against_known_answer_test():
@@ -100,4 +105,30 @@ def test_Poseidon2b_n32t24_against_known_answer_test():
     init_state = GF(INIT_STATE)
     computed_state = Poseidon2b(pos2b).permute(init_state)
 
-    assert all(computed_state == EXPECTED_STATE)
+    assert list(map(lambda x: int(x), computed_state)) == EXPECTED_STATE
+
+
+def test_Poseidon2b_n64t8_against_known_answer_test():
+    """
+    Test vector taken from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.ipynb.
+    """
+    pos2b = Poseidon2b_n64t8
+
+    INIT_STATE = [0, 1, 2, 3, 4, 5, 6, 7]
+    EXPECTED_STATE = [
+        5630310687624063658,
+        6289737725441534884,
+        14084478720876142317,
+        2253230934601515370,
+        7483738063588220639,
+        3747464340416986385,
+        7031526246119211789,
+        17484719721536023833,
+    ]
+
+    GF = gf.GF(2**pos2b.gf_degree)
+
+    init_state = GF(INIT_STATE)
+    computed_state = Poseidon2b(pos2b).permute(init_state)
+
+    assert list(map(lambda x: int(x), computed_state)) == EXPECTED_STATE
