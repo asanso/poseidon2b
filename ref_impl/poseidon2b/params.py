@@ -7,22 +7,44 @@ from .utils import SHAKEUtils
 
 @dataclass
 class Poseidon2bParameters:
-    gf_degree: int
-    state_len: int
-    num_full_rounds: int
-    num_partial_rounds: int
-    alpha: int
+    """
+    Dataclass for maintaining Poseidon2b parameters and generating round constants, partial round matrix and full round matrix.
+    """
+
+    gf_degree: int  # n
+    state_len: int  # t
+    num_full_rounds: int  # rF
+    num_partial_rounds: int  # rP
+    alpha: int  # d, power map exponent for S-box
 
     def num_total_rounds(self) -> int:
+        """
+        Returns `rF + rP`.
+        """
         return self.num_full_rounds + self.num_partial_rounds
 
     def num_initial_full_rounds(self) -> int:
+        """
+        The way full and partial rounds are applied in Poseidon2b permutation is following.
+
+        - `rF // 2` many full rounds        | INITIAL FULL ROUNDS
+        - `rP` many partial rounds          | ALL PARTIAL ROUNDS
+        - `rF - (rF // 2)` many full rounds | REMAINING FULL ROUNDS
+
+        This function simply return `rF // 2` i.e. number of full rounds to be applied at the beginning of the permutation.
+        """
         return self.num_full_rounds // 2
 
     def num_final_full_rounds(self) -> int:
+        """
+        This function returns remaining full rounds to be applied, after applying all partial rounds i.e. `rF - (rF // 2)`.
+        """
         return self.num_full_rounds - self.num_initial_full_rounds()
 
     def galois_field(self) -> type[gf.FieldArray]:
+        """
+        Galois field GF(2^n), over which Poseidon2b permutation is applied.
+        """
         if self.gf_degree == 128:
             return gf.GF(
                 2**self.gf_degree, irreducible_poly="x^128 + x^7 + x^2 + x + 1"
@@ -31,6 +53,10 @@ class Poseidon2bParameters:
             return gf.GF(2**self.gf_degree)
 
     def generate_partial_round_matrix(self) -> gf.FieldArray:
+        """
+        Generates partial round matrix for chosen Poseidon2b parameter set.
+        Collects inspiration from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.sage#L454-L483.
+        """
         assert (
             (self.gf_degree == 32 and (self.state_len == 16 or self.state_len == 24))
             or (self.gf_degree == 64 and (self.state_len == 8 or self.state_len == 12))
@@ -127,6 +153,10 @@ class Poseidon2bParameters:
         return ones + diagonal
 
     def generate_full_round_matrix(self) -> gf.FieldArray:
+        """
+        Generates full round matrix for chosen Poseidon2b parameter set.
+        Collects inspiration from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.sage#L485-L496.
+        """
         GF = self.galois_field()
 
         x = GF.primitive_element
@@ -163,12 +193,27 @@ class Poseidon2bParameters:
             return GF(np.block(blocks))
 
     def is_full_round(self, ridx: int) -> bool:
+        """
+        Given round index, checks whether this is a full round, returning boolean. Half of the full rounds are applied before partial rounds and remaining are applied after applying the partial rounds.
+        Based on https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.sage#L196.
+
+        - `rF // 2` many full rounds        | INITIAL FULL ROUNDS
+        - `rP` many partial rounds          | ALL PARTIAL ROUNDS
+        - `rF - (rF // 2)` many full rounds | REMAINING FULL ROUNDS
+        """
         return (ridx < self.num_total_rounds()) and (
             (ridx < self.num_initial_full_rounds())
             or (ridx >= (self.num_initial_full_rounds() + self.num_partial_rounds))
         )
 
     def generate_round_constants(self):
+        """
+        Generates Poseidon2b round constants for chosen parameter set.
+        Collects inspiration from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.sage#L498-L502.
+
+        It also zeroizes all round constants for partial rounds, except for the first branch. Technique adapted from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.sage#L198-L206.
+        This helps us avoid defining another function for applying round constants during partial rounds.
+        """
         shake_utils = SHAKEUtils(self.gf_degree)
         shake_reader = shake_utils.init_shake_reader()
 
@@ -189,6 +234,10 @@ class Poseidon2bParameters:
 
         return rc_mat
 
+
+"""
+Poseidon2b parameters, as suggested in table 1 (of page 7) of "Poseidon2b: A Binary Field Version of Poseidon2" paper @ https://ia.cr/2025/1893.
+"""
 
 Poseidon2b_n32t16 = Poseidon2bParameters(32, 16, 8, 15, 7)
 Poseidon2b_n32t24 = Poseidon2bParameters(32, 24, 8, 15, 7)

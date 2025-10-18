@@ -1,3 +1,7 @@
+"""
+Poseidon2b test vectors are taken from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.ipynb.
+"""
+
 from .poseidon2b import (
     Poseidon2b_n32t16,
     Poseidon2b_n32t24,
@@ -6,13 +10,9 @@ from .poseidon2b import (
     Poseidon2b_n128t4,
     Poseidon2b_n128t6,
 )
-import galois as gf
 
 
 def test_Poseidon2b_n32t16_against_known_answer_test():
-    """
-    Test vector taken from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.ipynb.
-    """
     pos2b = Poseidon2b_n32t16
 
     INIT_STATE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
@@ -44,9 +44,6 @@ def test_Poseidon2b_n32t16_against_known_answer_test():
 
 
 def test_Poseidon2b_n32t24_against_known_answer_test():
-    """
-    Test vector taken from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.ipynb.
-    """
     pos2b = Poseidon2b_n32t24
 
     INIT_STATE = [
@@ -111,9 +108,6 @@ def test_Poseidon2b_n32t24_against_known_answer_test():
 
 
 def test_Poseidon2b_n64t8_against_known_answer_test():
-    """
-    Test vector taken from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.ipynb.
-    """
     pos2b = Poseidon2b_n64t8
 
     INIT_STATE = [0, 1, 2, 3, 4, 5, 6, 7]
@@ -137,9 +131,6 @@ def test_Poseidon2b_n64t8_against_known_answer_test():
 
 
 def test_Poseidon2b_n128t4_against_known_answer_test():
-    """
-    Test vector taken from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.ipynb.
-    """
     pos2b = Poseidon2b_n128t4
 
     INIT_STATE = [0, 1, 2, 3]
@@ -159,9 +150,6 @@ def test_Poseidon2b_n128t4_against_known_answer_test():
 
 
 def test_Poseidon2b_n128t6_against_known_answer_test():
-    """
-    Test vector taken from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.ipynb.
-    """
     pos2b = Poseidon2b_n128t6
 
     INIT_STATE = [0, 1, 2, 3, 4, 5]
