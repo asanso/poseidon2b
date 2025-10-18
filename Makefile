@@ -35,6 +35,13 @@ test: ## Run tests using `pytest`
 gen_params: ## Generates all Poseidon2b parameters
 	$(VENV_PYTHON) ref_impl/gen_params.py | tee ref_impl/poseidon2b_parameters.txt
 
+.PHONY: gen_kats
+gen_kats: ## Generates Known Answer Tests for all Poseidon2b parameters
+	$(VENV_PYTHON) ref_impl/gen_kats.py
+	mkdir -p kats
+	mv *.kat kats
+	sha256sum kats/*
+
 .PHONY: format
 format: ## Formats code using `black`
 	@echo "Formatting code..."
