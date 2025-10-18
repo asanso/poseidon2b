@@ -1,19 +1,19 @@
 # poseidon2b
 
-Arithmetization Friendly Hash Function Poseidon over Binary Extension Field
+Arithmetization Friendly Hash Function Poseidon2b over Binary Extension Field
 
 ## Introduction
 
-Poseidon2b[^3] is an arithmetization friendly hash function, defined over binary extension field i.e. $GF(2^n)$. It extends well known Poseidon[^1] hash function to binary fields. Poseidon was originally defined over relatively large prime fields, generally those which are used in pairing-friendly elliptic curves. It has been a popular choice in developing zkSNARKs and zkSTARKs. Recently an optimization over Poseidon, Posiedon2[^2] was proposed, targeted towards smaller prime fields. As they are a popular choice in designing modern SNARKS.
+Poseidon2b[^3] is an arithmetization friendly hash function, defined over binary extension field i.e. $GF(2^n)$. It's designed to work nicely with proving systems like Binius[^6]. It extends well known Poseidon[^1] hash function to binary fields. Poseidon was originally defined over relatively large prime fields, generally those which are used in pairing-friendly elliptic curves. It has been a popular choice in developing zkSNARKs and zkSTARKs. Recently an optimization over Poseidon, Poseidon2[^2] was proposed, targeted towards smaller prime fields. As they are a popular choice in designing modern SNARKS.
 
 Poseidon2b has following two goals.
 
 - Being as fast as possible on a commodity CPU by using sparse constants and low-degree power maps.
 - Being fast in a proof system by minimizing the number of algebraic constraints.
 
-In this repository, we are maintaining a Python reference implementation of $Poseidon2b^\pi$ permutation. The Poseidon2b paper already comes with a sage reference implementation[^4]. The goal of this Python implementation is to provide the community with another implementation in different language as reference. We use this implementation to generate parameters such partial/ full round matrices and round constants for all proposed Poseidon2b instances in table 1 of Poseidon2b[^3]. This is to help future implementations with Poseidon2b parameters. Poseidon2b reference implementation comes with a Jupyter notebook[^5], which lists one test vector for each proposed parameter set. We generate 100 test vectors for each parameter set, hoping it will help future Poseidon2b implementations.
+In this repository, we are maintaining a Python reference implementation of $Poseidon2b^\pi$ permutation. The Poseidon2b paper already comes with a sage reference implementation[^4]. The goal of this Python implementation is to provide the community with another implementation in different language as reference. We use this implementation to generate parameters such partial-round and full-round matrices and round constants for all proposed Poseidon2b instances in table 1 of Poseidon2b[^3]. This is to help future implementations with detailed Poseidon2b parameters. Poseidon2b official reference implementation comes with a jupyter notebook[^5], which lists one test vector for each proposed parameter set. We generate 100 test vectors for each parameter set, hoping it will help future Poseidon2b implementations to ensure their correctness and conformance with the original proposed design and parameters.
 
-We plan to also develop an optimized Rust implementation of Poseidon2b, using carry-less multiplication intrinsics.
+We also plan to develop an optimized Rust implementation of Poseidon2b, using carry-less multiplication intrinsics.
 
 [^1]: Lorenzo Grassi, Dmitry Khovratovich, Christian Rechberger, Arnab Roy, and
 Markus Schofnegger. “Poseidon: A New Hash Function for Zero-Knowledge
@@ -28,7 +28,9 @@ Archive, Paper 2023/323. 2023. url: <https://eprint.iacr.org/2023/323>
 
 [^4]: Poseidon2b: A Binary Field Version of Poseidon2. url: <https://github.com/Poseidon-Hash/Poseidon2b/tree/aee285ce5f672bb70a4b25fa6d55d5706f755b76>
 
-[^5]: Poseidon2b: A Binary Field Version of Poseidon2. url: <https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.ipynb>
+[^5]: Jupyter Notebook showing Sagemath reference implementation of Poseidon2b: A Binary Field Version of Poseidon2. url: <https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.ipynb>
+
+[^6]: A SNARK using towers of binary fields, implemented in Rust. url: <https://gitlab.com/IrreducibleOSS/binius/>
 
 ## Testing
 
@@ -41,9 +43,9 @@ make test  # Runs known answer tests to self-check
 
 ## Scripts
 
-### Poseidon2b Parameters
+### Generate Poseidon2b Parameters
 
-You can use this Poseidon2b Python implementation for generating detailed parameters for all proposed parameter sets. Run the following command to generate it yourself. Or you can just use the generated file [./ref_impl/poseidon2b_parameters.txt](./ref_impl/poseidon2b_parameters.txt).
+You can use this Poseidon2b Python implementation for generating detailed parameters for all proposed parameter sets. It includes full and partial round matrices and round constants. Run the following command to generate it yourself. Or you can just use the generated file [./ref_impl/poseidon2b_parameters.txt](./ref_impl/poseidon2b_parameters.txt).
 
 ```bash
 make setup      # If you haven't done it yet
@@ -102,7 +104,7 @@ Full Round Matrix ((16, 16)):
 
 </details>
 
-### Poseidon2b Known Answer Tests
+### Generate Poseidon2b Known Answer Tests (KATs)
 
 Generate test vectors for all proposed Poseidon2b parameters by running following command. Or you can just use pre-computed KATs from [./kats](./kats) directory.
 
@@ -120,3 +122,7 @@ c968b1365add89bf3d788e005a348a1524680f1e25c13cb5217e6d0e2802eef6  kats/poseidon2
 355aa8fd414696dea477c06fa2236f552c7feedc31688b7bfcc23c3b2f8e7653  kats/poseidon2b_n64t12.kat
 ba4724c8c11cffc35883e53da40c5390447f3c5667e07a085d9ea61008c372ff  kats/poseidon2b_n64t8.kat
 ```
+
+## Usage
+
+For using Poseidon2b Python module, see [./ref_impl/README.md](./ref_impl).
