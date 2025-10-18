@@ -31,6 +31,10 @@ test: ## Run tests using `pytest`
 	@echo "Running tests..."
 	$(VENV_PYTEST) -v
 
+.PHONY: gen_params
+gen_params: ## Generates all Poseidon2b parameters
+	$(VENV_PYTHON) ref_impl/gen_params.py | tee ref_impl/poseidon2b_parameters.txt
+
 .PHONY: format
 format: ## Formats code using `black`
 	@echo "Formatting code..."
