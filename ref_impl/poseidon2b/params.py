@@ -1,14 +1,21 @@
+# poseidon2b/params.py
+
+from __future__ import annotations
+
 from dataclasses import dataclass
+
 import galois as gf
 import numpy as np
 from scipy.linalg import circulant
+
 from .utils import SHAKEUtils
 
 
 @dataclass
 class Poseidon2bParameters:
     """
-    Dataclass for maintaining Poseidon2b parameters and generating round constants, partial round matrix and full round matrix.
+    Dataclass for maintaining Poseidon2b parameters and generating round constants,
+    partial round matrix and full round matrix.
     """
 
     gf_degree: int  # n
@@ -25,19 +32,15 @@ class Poseidon2bParameters:
 
     def num_initial_full_rounds(self) -> int:
         """
-        The way full and partial rounds are applied in Poseidon2b permutation is following.
-
         - `rF // 2` many full rounds        | INITIAL FULL ROUNDS
         - `rP` many partial rounds          | ALL PARTIAL ROUNDS
         - `rF - (rF // 2)` many full rounds | REMAINING FULL ROUNDS
-
-        This function simply return `rF // 2` i.e. number of full rounds to be applied at the beginning of the permutation.
         """
         return self.num_full_rounds // 2
 
     def num_final_full_rounds(self) -> int:
         """
-        This function returns remaining full rounds to be applied, after applying all partial rounds i.e. `rF - (rF // 2)`.
+        Returns remaining full rounds to be applied, after applying all partial rounds.
         """
         return self.num_full_rounds - self.num_initial_full_rounds()
 
@@ -45,20 +48,20 @@ class Poseidon2bParameters:
         """
         Galois field GF(2^n), over which Poseidon2b permutation is applied.
         """
+        if self.gf_degree == 8:
+            # Match your toy GF(2^8) modulus
+            return gf.GF(2**8, irreducible_poly="x^8 + x^4 + x^3 + x^2 + 1")
         if self.gf_degree == 128:
-            return gf.GF(
-                2**self.gf_degree, irreducible_poly="x^128 + x^7 + x^2 + x + 1"
-            )
-        else:
-            return gf.GF(2**self.gf_degree)
+            return gf.GF(2**128, irreducible_poly="x^128 + x^7 + x^2 + x + 1")
+        return gf.GF(2**self.gf_degree)
 
     def generate_partial_round_matrix(self) -> gf.FieldArray:
         """
         Generates partial round matrix for chosen Poseidon2b parameter set.
-        Collects inspiration from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.sage#L454-L483.
         """
         assert (
-            (self.gf_degree == 32 and (self.state_len == 16 or self.state_len == 24))
+            (self.gf_degree == 8 and self.state_len == 16)
+            or (self.gf_degree == 32 and (self.state_len == 16 or self.state_len == 24))
             or (self.gf_degree == 64 and (self.state_len == 8 or self.state_len == 12))
             or (self.gf_degree == 128 and (self.state_len == 4 or self.state_len == 6))
         )
@@ -68,7 +71,9 @@ class Poseidon2bParameters:
         x = GF.primitive_element
         ones = GF.Ones((self.state_len, self.state_len)) - GF.Identity(self.state_len)
 
-        if self.gf_degree == 32 and self.state_len == 16:
+        # For n=8,t=16 we use the same "shape" as the n=32,t=16 diagonal, but in GF(2^8).
+        # DO NOT paste the printed integers like 1024/256/etc; those are encodings in GF(2^32).
+        if self.gf_degree == 8 and self.state_len == 16:
             diagonal = GF(
                 np.diag(
                     [
@@ -91,6 +96,31 @@ class Poseidon2bParameters:
                     ]
                 )
             )
+
+        elif self.gf_degree == 32 and self.state_len == 16:
+            diagonal = GF(
+                np.diag(
+                    [
+                        x**10,
+                        x**3,
+                        x**8,
+                        x**11,
+                        x**14,
+                        GF(1),
+                        x**15,
+                        x**10 + GF(1),
+                        x**4,
+                        x**2 + GF(1),
+                        x**6,
+                        x**7,
+                        x**13 + GF(1),
+                        x**2,
+                        x**5,
+                        x + GF(1),
+                    ]
+                )
+            )
+
         elif self.gf_degree == 32 and self.state_len == 24:
             diagonal = GF(
                 np.diag(
@@ -122,10 +152,12 @@ class Poseidon2bParameters:
                     ]
                 )
             )
+
         elif self.gf_degree == 64 and self.state_len == 8:
             diagonal = GF(
                 np.diag([x**7 + GF(1), x, x**9, x**7, x**13, x**12, x**14, x**6])
             )
+
         elif self.gf_degree == 64 and self.state_len == 12:
             diagonal = GF(
                 np.diag(
@@ -145,9 +177,12 @@ class Poseidon2bParameters:
                     ]
                 )
             )
+
         elif self.gf_degree == 128 and self.state_len == 4:
             diagonal = GF(np.diag([x**5, x**13, x**9, x**11]))
+
         else:
+            # gf_degree == 128 and state_len == 6
             diagonal = GF(np.diag([x**8, x**10, x**3, x**2, x**11, x**14]))
 
         return ones + diagonal
@@ -155,26 +190,15 @@ class Poseidon2bParameters:
     def generate_full_round_matrix(self) -> gf.FieldArray:
         """
         Generates full round matrix for chosen Poseidon2b parameter set.
-        Collects inspiration from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.sage#L485-L496.
         """
         GF = self.galois_field()
 
         x = GF.primitive_element
         mat4x4 = GF(
             [
-                [
-                    x**2 + GF(1),
-                    x**2 + x + GF(1),
-                    1,
-                    x + GF(1),
-                ],
+                [x**2 + GF(1), x**2 + x + GF(1), 1, x + GF(1)],
                 [x**2, x**2 + x, 1, 1],
-                [
-                    1,
-                    x + GF(1),
-                    x**2 + GF(1),
-                    x**2 + x + GF(1),
-                ],
+                [1, x + GF(1), x**2 + GF(1), x**2 + x + GF(1)],
                 [1, 1, x**2, x**2 + x],
             ]
         )
@@ -189,30 +213,21 @@ class Poseidon2bParameters:
                 [x * mat4x4 if i == j else mat4x4 for j in range(tby4)]
                 for i in range(tby4)
             ]
-
             return GF(np.block(blocks))
 
     def is_full_round(self, ridx: int) -> bool:
         """
-        Given round index, checks whether this is a full round, returning boolean. Half of the full rounds are applied before partial rounds and remaining are applied after applying the partial rounds.
-        Based on https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.sage#L196.
-
-        - `rF // 2` many full rounds        | INITIAL FULL ROUNDS
-        - `rP` many partial rounds          | ALL PARTIAL ROUNDS
-        - `rF - (rF // 2)` many full rounds | REMAINING FULL ROUNDS
+        Given round index, checks whether this is a full round.
         """
         return (ridx < self.num_total_rounds()) and (
             (ridx < self.num_initial_full_rounds())
             or (ridx >= (self.num_initial_full_rounds() + self.num_partial_rounds))
         )
 
-    def generate_round_constants(self):
+    def generate_round_constants(self) -> gf.FieldArray:
         """
-        Generates Poseidon2b round constants for chosen parameter set.
-        Collects inspiration from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.sage#L498-L502.
-
-        It also zeroizes all round constants for partial rounds, except for the first branch. Technique adapted from https://github.com/Poseidon-Hash/Poseidon2b/blob/aee285ce5f672bb70a4b25fa6d55d5706f755b76/sage-ref/Poseidon2b.sage#L198-L206.
-        This helps us avoid defining another function for applying round constants during partial rounds.
+        Generates Poseidon2b round constants for chosen parameter set,
+        then zeroizes all round constants for partial rounds except the first branch.
         """
         shake_utils = SHAKEUtils(self.gf_degree)
         shake_reader = shake_utils.init_shake_reader()
@@ -236,9 +251,14 @@ class Poseidon2bParameters:
 
 
 """
-Poseidon2b parameters, as suggested in table 1 (of page 7) of "Poseidon2b: A Binary Field Version of Poseidon2" paper @ https://ia.cr/2025/1893.
+Poseidon2b parameters, as suggested in table 1 (of page 7) of "Poseidon2b: A Binary Field Version of Poseidon2" paper
+(plus a toy n=8,t=16 instance for interpolation experiments).
 """
 
+# Toy (NOT from the paper; for interpolation experiments)
+Poseidon2b_n8t16 = Poseidon2bParameters(8, 16, 2, 0, 7)
+
+# Paper sets
 Poseidon2b_n32t16 = Poseidon2bParameters(32, 16, 8, 15, 7)
 Poseidon2b_n32t24 = Poseidon2bParameters(32, 24, 8, 15, 7)
 Poseidon2b_n64t8 = Poseidon2bParameters(64, 8, 8, 29, 7)
@@ -248,4 +268,4 @@ Poseidon2b_n128t6 = Poseidon2bParameters(128, 6, 8, 58, 7)
 
 if __name__ == "__main__":
     print("This is not an executable module.")
-    exit(1)
+    raise SystemExit(1)
